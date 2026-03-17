@@ -24,27 +24,6 @@ def test_fdtd_solves_basic_propagation():
     
     assert np.allclose(e_solved, e_expected)
 
-<<<<<<< HEAD
-def gaussian(x, x0, sigma):
-    return np.exp(-(x - x0)**2 / (2 * sigma**2))
-
-
-def test_fdtd_solves_one_wave():
-    x = np.linspace(-1, 1, 100)
-    x0 = 0.0
-    sigma = 0.05
-    initial_e = gaussian(x, x0, sigma)
-    fdtd = FDTD1D(initial_e)
-    fdtd.load_initial_field(initial_e)
-
-    fdtd.run_until(t_final)
-
-    e_solved = get_e()
-
-    e_expected = 0.5 * (gaussian(x - c * t_final, x0, sigma) + gaussian(x + c * t_final, x0, sigma))
-
-    assert np.allclose(e_solved, e_expected)
-=======
 
 def test_fdtd_PEC_boundary_conditions():
     xMax = 1
@@ -71,7 +50,34 @@ def test_fdtd_PEC_boundary_conditions():
     
     assert np.allclose(e_solved, e_expected)
     assert np.allclose(h_solved, h_expected)
->>>>>>> 95cfd69385fc542087fefe8949eebcb0ac79d656
+
+def test_fdtd_PMC_boundary_conditions():
+    # Test
+    xMax = 1
+    xMin = -1
+    x = np.linspace(xMin, xMax, 201)
+    boundaries = ('PMC', 'PMC')
+    
+    x0 = 0.0
+    sigma = 0.05
+    initial_h = gaussian(x, x0, sigma)
+    fdtd.load_initial_field(initial_h)
+    
+    fdtd = FDTD1D(x, boundaries)
+
+    L = xMax - xMin
+    t_final = L / C
+    fdtd.run_until(t_final)
+
+    e_solved = fdtd.get_e()
+    h_solved = fdtd.get_h()
+
+    e_expected = np.zeros_like(e_solved)
+    h_expected = - initial_h
+
+    assert np.allclose(e_solved, e_expected)
+    assert np.allclose(h_solved, h_expected)
+
 
 
 if __name__ == "__main__":
