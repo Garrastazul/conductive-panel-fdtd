@@ -20,9 +20,9 @@ class FDTD1D:
     def _step(self):
         r = self.dt / self.dx
         
+        self.e[1:-1] += r * (self.h[1:] - self.h[:-1])
         self.h += r * (self.e[1:] - self.e[:-1])
         
-        self.e[1:-1] += r * (self.h[1:] - self.h[:-1])
         self.t += self.dt
 
     def run_until(self, t_final):
