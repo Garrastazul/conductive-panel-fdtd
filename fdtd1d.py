@@ -7,9 +7,9 @@ def gaussian(x, x0, sigma):
 
 
 class FDTD1D:
-    def __init__(self, x, boundaries=None):
+    def __init__(self, x, boundaries=None, x_o=None, pert=None):
         self.x = x
-        self.xH = (self.x[:1] + self.x[:-1]) / 2.0
+        self.xH = (self.x[1:] + self.x[:-1]) / 2.0
         self.dx = x[1] - x[0]
         self.dt = self.dx / C  
         self.N = len(x)
@@ -17,6 +17,8 @@ class FDTD1D:
         self.h = np.zeros(self.N - 1) 
         self.t = 0.0
         self.boundaries = boundaries
+        self.x_o = x_o
+        self.pert = pert
 
     def load_initial_field(self, e0):
         self.e = e0.copy()
@@ -50,8 +52,18 @@ class FDTD1D:
                 mur_coeff = (C * self.dt - self.dx) / (C * self.dt + self.dx)
                 self.e[-1] = e_old_right_1 + mur_coeff * (self.e[-2] - e_old_right_0)
 
+        if self.pert is not None and self.x_o is not None:
+            idx = np.argmin(np.abs(self.x - self.x_o))
+            self.e[idx] += self.pert(self.t)
+
         self.h += r * (self.e[1:] - self.e[:-1])
     
+        if self.boundaries is not None:
+            if self.boundaries[0] == 'PMC':
+                self.h[0] = 0.0
+            if self.boundaries[1] == 'PMC':
+                self.h[-1] = 0.0
+        
         self.t += self.dt   
 
     def run_until(self, t_final):

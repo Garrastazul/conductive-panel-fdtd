@@ -81,10 +81,64 @@ def test_fdtd_periodic_boundary_conditions():
     h_expected = initial_h
 
     assert np.corrcoef(e_solved, e_expected)[0, 1] > 0.99
-    assert np.allclose(h_solved, h_expected, atol=1e-2)
+    assert np.allclose(h_solved, h_expected, atol=1e-10)
 
+def test_fdtd_PMC_boundary_conditions():
+    xMax = 1
+    xMin = -1
+    x = np.linspace(xMin, xMax, 201)
+    xH = (x[1:] + x[:-1]) / 2.0
+    boundaries = ('PMC', 'PMC')
+    
+    x0 = 0.0
+    sigma = 0.05
+    initial_h = gaussian(xH, x0, sigma)
+    initial_e = np.zeros_like(x)
 
+    fdtd = FDTD1D(x, boundaries)
+    fdtd.load_initial_field(initial_e)
+    fdtd.h = initial_h.copy()
 
+    L = xMax - xMin
+    t_final = L / C
+    fdtd.run_until(t_final)
+
+    e_solved = fdtd.get_e()
+    h_solved = fdtd.get_h()
+
+    h_expected = - initial_h
+    e_expected = np.zeros_like(e_solved)
+
+    assert np.corrcoef(h_solved, h_expected)[0,1] > 0.99
+    assert np.max(np.abs(e_solved - e_expected)) < 0.2
+
+def test_fdtd_total_spread_field():
+    xMax = 1
+    xMin = -1
+    L = xMax - xMin
+
+    x = np.linspace(xMin,xMax,201)
+    xH = (x[1:] + x[:-1]) / 2.0
+    boundaries = ('PEC','PEC') 
+    x_o = 0
+    initial_e = np.zeros_like(x)
+
+    def my_pert(t):
+        return np.sin(t)
+
+    fdtd = FDTD1D(x,boundaries,x_o,pert = lambda t: my_pert(t))
+    fdtd.load_initial_field(initial_e)
+    t_final = L / C
+    fdtd.run_until(t_final)
+
+    e_solved = fdtd.get_e()
+    h_solved = fdtd.get_h()
+
+    e_expected = np.sin(x - L)
+    h_expected = np.sin(xH - L)
+    
+    assert np.corrcoef(e_solved, e_expected)[0,1] > -0.6
+    assert np.corrcoef(h_solved, h_expected)[0,1] > 0.8
 
 def test_fdtd_mur_boundary_conditions():
     xMax = 1
