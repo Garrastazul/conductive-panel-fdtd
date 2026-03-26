@@ -5,8 +5,10 @@ C = 1.0
 def gaussian(x, x0, sigma):
     return np.exp(-0.5 * ((x - x0)/sigma)**2)
 
-
 class FDTD1D:
+    mu0 = 1.0
+    eps0 = 1.0  
+    
     def __init__(self, x, boundaries=None):
         self.x = x
         self.xH = (self.x[:1] + self.x[:-1]) / 2.0
@@ -17,14 +19,22 @@ class FDTD1D:
         self.h = np.zeros(self.N - 1) 
         self.t = 0.0
         self.boundaries = boundaries
+        
+        self.sig = np.zeros(self.N)
+        self.eps_r = np.ones(self.N)      
+        self.eps = self.eps0 * self.eps_r  
 
     def load_initial_field(self, e0):
         self.e = e0.copy()
         
     def _step(self):
         r = self.dt / self.dx
+        
+        self.eps = self.eps0 * self.eps_r
+
+        ca = (2 * self.eps - self.sig * self.dt) / (2 * self.eps + self.sig * self.dt)
+        cb = (2 * self.dt / self.dx) / (2 * self.eps + self.sig * self.dt)
     
-        # Save boundary values before E update (needed for Mur ABC)
         if self.boundaries is not None:
             if self.boundaries[0] == 'mur':
                 e_old_left_0 = self.e[0]
@@ -33,7 +43,7 @@ class FDTD1D:
                 e_old_right_0 = self.e[-1]
                 e_old_right_1 = self.e[-2]
 
-        self.e[1:-1] += r * (self.h[1:] - self.h[:-1])
+        self.e[1:-1] = ca[1:-1] * self.e[1:-1] + cb[1:-1] * (self.h[1:] - self.h[:-1])
 
         if self.boundaries is not None:
             if self.boundaries[0] == 'PEC':
@@ -41,7 +51,7 @@ class FDTD1D:
             if self.boundaries[1] == 'PEC':
                 self.e[-1] = 0.0
             if self.boundaries[0] == 'periodic':
-                self.e[0] += r * (self.h[0] - self.h[-1])
+                self.e[0] = ca[0] * self.e[0] + cb[0] * (self.h[0] - self.h[-1])
                 self.e[-1] = self.e[0]
             if self.boundaries[0] == 'mur':
                 mur_coeff = (C * self.dt - self.dx) / (C * self.dt + self.dx)
