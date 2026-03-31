@@ -188,8 +188,8 @@ def test_fdtd_total_spread_field():
     initial_e = np.zeros_like(x)
 
     def my_pert(t):
-        return np.sin(2*2*np.pi*2*C/L*t)
-    
+        #return np.sin(2*2*np.pi*2*C/L*t)
+        return gaussian(t, L/(4*C), 0.05)
     fdtd = FDTD1D(x,boundaries,x_o,x_f,pert = lambda t: my_pert(t), pert_dir = True)
     fdtd.load_initial_field(initial_e)
     t_final = L / (2*C) *2
