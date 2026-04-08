@@ -56,8 +56,9 @@ fdtd.h = initial_h.copy()
 fdtd.eps_r = np.where((x >= panel_left) & (x <= panel_right), eps_r, 1.0)
 fdtd.sig = np.where((x >= panel_left) & (x <= panel_right), sigma_val, 0.0)
 
-n_frames = 250
-dt_per_frame = 0.015
+t_end = 4.0
+dt_per_frame = 1e-2
+n_frames = int(t_end/dt_per_frame)
 
 frames_e = []
 frames_h = []

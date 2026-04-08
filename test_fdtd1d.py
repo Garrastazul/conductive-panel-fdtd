@@ -212,8 +212,8 @@ def test_fdtd_dissipative_exact():
 
 
 def test_fdtd_dielectric_reflection():
-    L = 2.0
-    N = 401
+    L = 4.0
+    N = 2001
     x = np.linspace(0, L, N)
     xH = (x[1:] + x[:-1]) / 2.0
     dx = x[1] - x[0]
@@ -221,16 +221,7 @@ def test_fdtd_dielectric_reflection():
     
     boundaries = ('mur', 'mur')
 
-    x0 = 0.4
-    sigma = 0.05
-    initial_e = gaussian(x, x0, sigma)
-    initial_h = -gaussian(xH, x0, sigma)
-
-    E_inc_max = np.max(initial_e)
-
     fdtd = FDTD1D(x, boundaries)
-    fdtd.load_initial_field(initial_e)
-    fdtd.h = initial_h.copy()
 
     eps_r_1 = 1.0   
     eps_r_2 = 4.0   
@@ -239,16 +230,27 @@ def test_fdtd_dielectric_reflection():
     fdtd.eps_r = np.where(x < interface_pos, eps_r_1, eps_r_2)
     fdtd.sig = np.zeros_like(x) 
 
-    eta_0 = 1.0 / np.sqrt(eps_r_1)  # = 1
-    eta_1 = 1.0 / np.sqrt(eps_r_2)  # = 0.5
-    R_theory = (eta_0 - eta_1) / (eta_0 + eta_1)
+    eta_1 = 1.0 / np.sqrt(eps_r_1)  # = 1
+    eta_2 = 1.0 / np.sqrt(eps_r_2)  # = 0.5
+    R_theory = (eta_1 - eta_2) / (eta_1 + eta_2)
 
-    obs_idx = 30  # x ≈ 0.15
+    x0 = 1.0
+    sigma = 0.05
+    initial_e = gaussian(x, x0, sigma)
+    initial_h = gaussian(xH, x0, sigma) / eta_1
+
+    E_inc_max = np.max(initial_e)
+
+    fdtd.load_initial_field(initial_e)
+    fdtd.h = initial_h.copy()
+
+    x_obs = 0.5
+    obs_idx = np.argmin(np.abs(x - x_obs))
 
     t_at_interface = (interface_pos - x0) / C
     t_ref_at_obs = t_at_interface + (interface_pos - x[obs_idx]) / C
 
-    t_final = 2.0
+    t_final = 2 * interface_pos / C
     n_steps = int(t_final / dt)
     
     E_ref_max_observed = 0.0
