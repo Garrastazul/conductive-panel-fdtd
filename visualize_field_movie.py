@@ -143,7 +143,6 @@ fig_mur, ax_mur = plt.subplots(figsize=(8, 4))
 
 ax_mur.set_xlim(x_mur[0], x_mur[-1])
 ax_mur.set_ylim(-1.1, 1.1)
-ax_mur.set_xlim(-1.1, 1.1)
 ax_mur.set_xlabel("x")
 ax_mur.set_ylabel("Field amplitude")
 ax_mur.set_title("1-D FDTD – Mur ABC – Left-traveling wave absorption")
