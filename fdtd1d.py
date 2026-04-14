@@ -63,7 +63,7 @@ class FDTD1D:
     mu0 = 1.0
     eps0 = 1.0  
     
-    def __init__(self, x, boundaries=None, x_o=None, pert=None):
+    def __init__(self, x, boundaries=None, x_o=None, pert=None, pert_dir = False):
         self.x = x
         self.xH = (self.x[1:] + self.x[:-1]) / 2.0
         self.dx = x[1] - x[0]
@@ -79,12 +79,11 @@ class FDTD1D:
         self.eps = self.eps0 * self.eps_r  
         self.x_o = x_o
         self.pert = pert
+        self.pert_dir = pert_dir
 
-    # Cambia el estado del campo inicial a lo que se le pase
     def load_initial_field(self, e0):
         self.e = e0.copy()
     
-    # Función de actualización
     def _step(self):
         r = self.dt / self.dx
         
@@ -100,6 +99,10 @@ class FDTD1D:
             if self.boundaries[1] == 'mur':
                 e_old_right_0 = self.e[-1]
                 e_old_right_1 = self.e[-2]
+        
+        if self.pert_dir and self.pert is not None and self.x_o is not None and self.t != 0.0:
+            idx = np.argmin(np.abs(self.xH - self.x_o))
+            self.h[idx] += self.pert(self.t)
 
         self.e[1:-1] = ca[1:-1] * self.e[1:-1] - cb[1:-1] * (self.h[1:] - self.h[:-1])
 
@@ -124,7 +127,7 @@ class FDTD1D:
 
         if self.pert is not None and self.x_o is not None:
             idx = np.argmin(np.abs(self.x - self.x_o))
-            self.e[idx] = self.pert(self.t)
+            self.e[idx] += self.pert(self.t + self.dt/2 + self.dx/2/C) 
 
         self.h -= r * (self.e[1:] - self.e[:-1])
         
@@ -134,6 +137,13 @@ class FDTD1D:
         n_steps = round((t_final - self.t) / self.dt)
         for _ in range(n_steps):
             self._step()
+            # plt.clf()
+            # plt.plot(self.x, self.get_e(), label="E")
+            # plt.plot((self.x[1:] + self.x[:-1]) / 2.0, self.get_h(), label="H")
+
+            # plt.ylim(-1.2, 1.2)
+            # plt.legend()
+            # plt.pause(0.001)
         self.t = t_final  
         
     def get_e(self):
