@@ -135,9 +135,9 @@ def test_fdtd_perturbation():
     h_solved = fdtd.get_h()
     
     e_expected = my_pert(L/C/2 - np.abs(x)/C)/2
-    h_expected = my_pert(L/C/2 - xH/C)/2
-    plt.plot(xH,h_expected)
-    plt.show()
+    h_expected = my_pert(L/C/2 - xH/C + fdtd.dt/2)/2
+    # plt.plot(xH,h_expected)
+    # plt.show()
 
     assert np.allclose(e_solved, e_expected, atol=1e-1)
     assert np.allclose(h_solved, h_expected, atol=1e-1)
@@ -165,12 +165,12 @@ def test_fdtd_eh_perturbation():
     h_solved = fdtd.get_h()
     
     e_expected = my_pert(L/C/2 - np.abs(x)/C)
-    h_expected = my_pert(L/C/2 - xH/C)
+    h_expected = my_pert(L/C/2 - xH/C+ + fdtd.dt/2)
 
     e_expected[x<0.1] = 0
     h_expected[xH<0.1] = 0
-    plt.plot(x,e_expected)
-    plt.show()
+    # plt.plot(x,e_expected)
+    # plt.show()
 
     assert np.allclose(e_solved, e_expected, atol=1e-3)
     assert np.allclose(h_solved, h_expected, atol=1e-3)

@@ -49,7 +49,7 @@ class FDTD1D:
         
         if self.pert_dir and self.pert is not None and self.x_o is not None and self.t != 0.0:
             idx = np.argmin(np.abs(self.xH - self.x_o))
-            self.h[idx] += self.pert(self.t - self.dt/2)
+            self.h[idx] += self.pert(self.t)
 
         self.e[1:-1] = ca[1:-1] * self.e[1:-1] - cb[1:-1] * (self.h[1:] - self.h[:-1])
 
@@ -74,7 +74,7 @@ class FDTD1D:
 
         if self.pert is not None and self.x_o is not None:
             idx = np.argmin(np.abs(self.x - self.x_o))
-            self.e[idx] += self.pert(self.t + self.dt/2) 
+            self.e[idx] += self.pert(self.t + self.dt/2 + self.dx/2/C) 
 
         self.h -= r * (self.e[1:] - self.e[:-1])
         
@@ -84,13 +84,13 @@ class FDTD1D:
         n_steps = round((t_final - self.t) / self.dt)
         for _ in range(n_steps):
             self._step()
-            plt.clf()
-            plt.plot(self.x, self.get_e(), label="E")
-            plt.plot((self.x[1:] + self.x[:-1]) / 2.0, self.get_h(), label="H")
+            # plt.clf()
+            # plt.plot(self.x, self.get_e(), label="E")
+            # plt.plot((self.x[1:] + self.x[:-1]) / 2.0, self.get_h(), label="H")
 
-            plt.ylim(-1.2, 1.2)
-            plt.legend()
-            plt.pause(0.001)
+            # plt.ylim(-1.2, 1.2)
+            # plt.legend()
+            # plt.pause(0.001)
         self.t = t_final  
         
     def get_e(self):
